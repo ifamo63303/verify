@@ -1,77 +1,124 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IFAMO Document Verification</title>
+  <title>Document Verification – IFAMO GmbH</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      background: #f4f4f4;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: Arial, sans-serif; background: #404040; display: flex; }
+
+    .sidebar {
+      width: 220px; min-width: 220px; background: #fff;
+      display: flex; flex-direction: column;
+      padding: 24px 18px;
+      box-shadow: 2px 0 12px rgba(0,0,0,.18);
+      z-index: 1; overflow-y: auto;
     }
-    .box {
-      text-align: center;
-      background: white;
-      padding: 40px;
-      border-radius: 8px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-    }
-    .logo { font-size: 22px; font-weight: bold; color: #333; margin-bottom: 8px; }
-    .sub  { color: #888; font-size: 14px; margin-bottom: 24px; }
-    .spinner {
-      width: 40px; height: 40px;
-      border: 4px solid #e0e0e0;
-      border-top-color: #555;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 20px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .msg { color: #555; font-size: 15px; }
-    .btn {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 10px 24px;
-      background: #333;
-      color: white;
-      border-radius: 4px;
-      text-decoration: none;
-      font-size: 14px;
+    .sb-logo { font-size: 17px; font-weight: bold; color: #1a3a6b; margin-bottom: 2px; }
+    .sb-addr { font-size: 10px; color: #aaa; margin-bottom: 16px; line-height: 1.5; }
+    .sb-divider { border: none; border-top: 2px solid #1a3a6b; margin-bottom: 16px; }
+    .badge { display: inline-block; background: #eafaf1; color: #27ae60; border: 1px solid #a9dfbf; border-radius: 12px; padding: 4px 10px; font-size: 11px; font-weight: bold; margin-bottom: 20px; }
+    .field { margin-bottom: 14px; }
+    .field-label { font-size: 10px; font-weight: bold; color: #aaa; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+    .field-value { font-size: 13px; color: #222; font-weight: bold; word-break: break-word; }
+    .spacer { flex: 1; }
+    .btn { display: block; width: 100%; padding: 11px 0; border: none; border-radius: 7px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; margin-bottom: 8px; }
+    .btn:hover { opacity: .87; }
+    .btn-dl    { background: #e65100; color: #fff; }
+    .btn-email { background: #1565c0; color: #fff; }
+    .btn-close { background: #424242; color: #fff; }
+    .sb-footer { font-size: 9px; color: #ccc; text-align: center; margin-top: 12px; line-height: 1.5; }
+
+    .pdf-wrap { flex: 1; position: relative; overflow: hidden; }
+    iframe { width: 100%; height: calc(100% + 55px); border: none; display: block; }
+    .drive-blocker { position: absolute; top: 0; right: 0; width: 52px; height: 52px; z-index: 10; }
+
+    @media (max-width: 600px) {
+      body { flex-direction: column; overflow: auto; }
+      html, body { height: auto; }
+      .sidebar { width: 100%; min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,.15); padding: 16px; }
+      .field { display: inline-block; width: 48%; vertical-align: top; margin-bottom: 12px; }
+      .spacer { display: none; }
+      .btn { display: inline-block; width: auto; padding: 9px 20px; margin-right: 8px; }
+      .sb-footer { display: none; }
+      .pdf-wrap { height: 85vh; }
     }
   </style>
 </head>
 <body>
-<div class="box">
-  <div class="logo">IFAMO GmbH</div>
-  <div class="sub">Document Verification</div>
-  <div class="spinner"></div>
-  <div class="msg" id="msg">Redirecting...</div>
-  <div id="fallback"></div>
+
+<div class="sidebar">
+  <div class="sb-logo">IFAMO GmbH</div>
+  <div class="sb-addr">Robert-Bosch-Stra&szlig;e 5 C<br>63303 Dreieich &middot; Germany</div>
+  <hr class="sb-divider">
+  <div class="badge">&#10003; Verified Document</div>
+  <div class="field">
+    <div class="field-label">Document No</div>
+    <div class="field-value" id="f-doc"></div>
+  </div>
+  <div class="field">
+    <div class="field-label">Date</div>
+    <div class="field-value" id="f-date"></div>
+  </div>
+  <div class="field">
+    <div class="field-label">Recipient</div>
+    <div class="field-value" id="f-recipient"></div>
+  </div>
+  <div class="spacer"></div>
+  <a class="btn btn-dl" id="btn-dl" href="#" target="_blank">&#11015; Download PDF</a>
+  <a class="btn btn-email" id="btn-email" href="#">&#9993; Send by Email</a>
+  <button class="btn btn-close" onclick="closePage()">&#10005; Close</button>
+  <div class="sb-footer">IFAMO GmbH &middot; Dreieich<br>HRB 51794 Offenbach am Main</div>
+</div>
+
+<div class="pdf-wrap">
+  <div class="drive-blocker"></div>
+  <iframe id="pdf-frame" src="" allowfullscreen></iframe>
 </div>
 
 <script>
-  const APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxUnUjn_pnFfngSH8DbV4owjvABT2A9-8wzspKMh3Ii1XWxZ9lhOIGN15ExuvNrEUW5/exec";
+  var p = new URLSearchParams(window.location.search);
+  var docNo     = p.get('doc')       || '';
+  var pdfId     = p.get('pdf')       || '';
+  var date      = p.get('date')      || '';
+  var recipient = p.get('recipient') || '';
 
-  const params = new URLSearchParams(window.location.search);
-  const target = APPS_SCRIPT + "?" + params.toString();
+  document.title = 'Document Verification \u2013 ' + docNo;
+  document.getElementById('f-doc').textContent       = docNo;
+  document.getElementById('f-date').textContent      = date;
+  document.getElementById('f-recipient').textContent = recipient;
 
-  // iOS'ta script.google.com'u Google Drive app intercept edememesi için
-  // window.location yerine link gösteriyoruz, otomatik yönlendirme de yapılıyor
-  setTimeout(function() {
-    window.location.replace(target);
-  }, 300);
+  if (pdfId) {
+    document.getElementById('pdf-frame').src =
+      'https://drive.google.com/file/d/' + pdfId + '/preview';
+    document.getElementById('btn-dl').href =
+      'https://drive.google.com/uc?id=' + pdfId + '&export=download&confirm=t';
+  }
 
-  // Yönlendirme çalışmazsa manuel buton göster
-  setTimeout(function() {
-    document.getElementById("msg").textContent = "Tap the button below to open the document.";
-    document.getElementById("fallback").innerHTML =
-      '<a class="btn" href="' + target + '">Open Document</a>';
-  }, 2000);
+  // Send by Email
+  var verifyUrl = window.location.href;
+  var subject   = 'Document Verification \u2013 ' + docNo + ' \u2013 IFAMO GmbH';
+  var body =
+    'Dear Sir or Madam,\n\n' +
+    'Please find below the verified document issued by IFAMO GmbH:\n\n' +
+    '  Document No : ' + docNo + '\n' +
+    '  Date        : ' + date  + '\n' +
+    '  Recipient   : ' + recipient + '\n\n' +
+    'View / Verify Document:\n' + verifyUrl + '\n\n' +
+    'This document has been officially issued and verified by IFAMO GmbH.\n\n' +
+    'Best regards,\nIFAMO GmbH\n\n' +
+    'Robert-Bosch-Stra\u00dfe 5 C \u00b7 63303 Dreieich \u00b7 Germany\n' +
+    'Tel: +49 (0) 6103 509 5001\nwww.ifamo.de';
+  document.getElementById('btn-email').href =
+    'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+
+  function closePage() {
+    try { top.close(); } catch(e) {}
+    try { window.close(); } catch(e) {}
+  }
 </script>
+
 </body>
 </html>
