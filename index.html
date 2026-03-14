@@ -6,9 +6,10 @@
   <title>Document Verification – IFAMO GmbH</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; }
+    html, body { height: 100%; }
     body { font-family: Arial, sans-serif; background: #404040; display: flex; }
 
+    /* ── DESKTOP ── */
     .sidebar {
       width: 220px; min-width: 220px; background: #fff;
       display: flex; flex-direction: column;
@@ -16,8 +17,8 @@
       box-shadow: 2px 0 12px rgba(0,0,0,.18);
       z-index: 1; overflow-y: auto;
     }
-    .sb-logo { font-size: 17px; font-weight: bold; color: #1a3a6b; margin-bottom: 2px; }
-    .sb-addr { font-size: 10px; color: #aaa; margin-bottom: 16px; line-height: 1.5; }
+    .sb-logo  { font-size: 17px; font-weight: bold; color: #1a3a6b; margin-bottom: 2px; }
+    .sb-addr  { font-size: 10px; color: #aaa; margin-bottom: 16px; line-height: 1.5; }
     .sb-divider { border: none; border-top: 2px solid #1a3a6b; margin-bottom: 16px; }
     .badge { display: inline-block; background: #eafaf1; color: #27ae60; border: 1px solid #a9dfbf; border-radius: 12px; padding: 4px 10px; font-size: 11px; font-weight: bold; margin-bottom: 20px; }
     .field { margin-bottom: 14px; }
@@ -27,24 +28,50 @@
     .btn { display: block; width: 100%; padding: 11px 0; border: none; border-radius: 7px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; margin-bottom: 8px; }
     .btn:hover { opacity: .87; }
     .btn-dl    { background: #e65100; color: #fff; }
+    .btn-view  { background: #2e7d32; color: #fff; }
     .btn-email { background: #1565c0; color: #fff; }
     .btn-close { background: #424242; color: #fff; }
     .sb-footer { font-size: 9px; color: #ccc; text-align: center; margin-top: 12px; line-height: 1.5; }
 
     .pdf-wrap { flex: 1; position: relative; overflow: hidden; }
     iframe { width: 100%; height: calc(100% + 55px); border: none; display: block; }
-    .drive-blocker { position: absolute; top: 0; right: 0; width: 52px; height: 52px; z-index: 10; }
+    .drive-blocker { position: absolute; top: 0; right: 0; width: 60px; height: 60px; z-index: 10; }
 
-    @media (max-width: 600px) {
-      body { flex-direction: column; overflow: auto; }
-      html, body { height: auto; }
-      .sidebar { width: 100%; min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,.15); padding: 16px; }
-      .field { display: inline-block; width: 48%; vertical-align: top; margin-bottom: 12px; }
-      .spacer { display: none; }
-      .btn { display: inline-block; width: auto; padding: 9px 20px; margin-right: 8px; }
+    /* ── MOBILE ── */
+    @media (max-width: 700px) {
+      html, body { height: auto; overflow: auto; background: #f0f2f5; }
+      body { flex-direction: column; }
+
+      .sidebar {
+        width: 100%; min-width: 0;
+        box-shadow: none;
+        padding: 20px 16px 16px;
+      }
+      .sb-logo  { font-size: 20px; }
+      .badge    { display: block; text-align: center; font-size: 13px; padding: 8px 14px; margin-bottom: 20px; }
+      .field-label { font-size: 11px; }
+      .field-value { font-size: 15px; }
+      .spacer   { display: none; }
       .sb-footer { display: none; }
-      .pdf-wrap { height: 85vh; }
+
+      /* hide desktop buttons in sidebar on mobile */
+      .sidebar .btn { display: none; }
+
+      /* hide iframe on mobile */
+      .pdf-wrap { display: none; }
+
+      /* show mobile button area */
+      .mobile-btns { display: flex !important; }
     }
+
+    .mobile-btns {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      padding: 16px;
+      background: #f0f2f5;
+    }
+    .mobile-btns .btn { margin-bottom: 0; padding: 15px 0; font-size: 15px; border-radius: 10px; }
   </style>
 </head>
 <body>
@@ -67,19 +94,29 @@
     <div class="field-value" id="f-recipient"></div>
   </div>
   <div class="spacer"></div>
-  <a class="btn btn-dl" id="btn-dl" href="#" target="_blank">&#11015; Download PDF</a>
+  <!-- desktop buttons -->
+  <a class="btn btn-dl"    id="btn-dl"    href="#" target="_blank">&#11015; Download PDF</a>
   <a class="btn btn-email" id="btn-email" href="#">&#9993; Send by Email</a>
   <button class="btn btn-close" onclick="closePage()">&#10005; Close</button>
   <div class="sb-footer">IFAMO GmbH &middot; Dreieich<br>HRB 51794 Offenbach am Main</div>
 </div>
 
+<!-- desktop PDF viewer -->
 <div class="pdf-wrap">
   <div class="drive-blocker"></div>
   <iframe id="pdf-frame" src="" allowfullscreen></iframe>
 </div>
 
+<!-- mobile buttons -->
+<div class="mobile-btns">
+  <a class="btn btn-view"  id="btn-view"  href="#" target="_blank">&#128196; View PDF</a>
+  <a class="btn btn-dl"    id="btn-dl-m"  href="#" target="_blank">&#11015; Download PDF</a>
+  <a class="btn btn-email" id="btn-email-m" href="#">&#9993; Send by Email</a>
+  <button class="btn btn-close" onclick="closePage()">&#10005; Close</button>
+</div>
+
 <script>
-  var p = new URLSearchParams(window.location.search);
+  var p         = new URLSearchParams(window.location.search);
   var docNo     = p.get('doc')       || '';
   var pdfId     = p.get('pdf')       || '';
   var date      = p.get('date')      || '';
@@ -90,14 +127,16 @@
   document.getElementById('f-date').textContent      = date;
   document.getElementById('f-recipient').textContent = recipient;
 
-  if (pdfId) {
-    document.getElementById('pdf-frame').src =
-      'https://drive.google.com/file/d/' + pdfId + '/preview';
-    document.getElementById('btn-dl').href =
-      'https://drive.google.com/uc?id=' + pdfId + '&export=download&confirm=t';
-  }
+  var dlUrl   = pdfId ? 'https://drive.google.com/uc?id=' + pdfId + '&export=download&confirm=t' : '#';
+  var viewUrl = pdfId ? 'https://drive.google.com/file/d/' + pdfId + '/view' : '#';
 
-  // Send by Email
+  if (pdfId) {
+    document.getElementById('pdf-frame').src = 'https://drive.google.com/file/d/' + pdfId + '/preview';
+  }
+  document.getElementById('btn-dl').href    = dlUrl;
+  document.getElementById('btn-dl-m').href  = dlUrl;
+  document.getElementById('btn-view').href  = viewUrl;
+
   var verifyUrl = window.location.href;
   var subject   = 'Document Verification \u2013 ' + docNo + ' \u2013 IFAMO GmbH';
   var body =
@@ -111,14 +150,14 @@
     'Best regards,\nIFAMO GmbH\n\n' +
     'Robert-Bosch-Stra\u00dfe 5 C \u00b7 63303 Dreieich \u00b7 Germany\n' +
     'Tel: +49 (0) 6103 509 5001\nwww.ifamo.de';
-  document.getElementById('btn-email').href =
-    'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  var mailto = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  document.getElementById('btn-email').href   = mailto;
+  document.getElementById('btn-email-m').href = mailto;
 
   function closePage() {
     try { top.close(); } catch(e) {}
     try { window.close(); } catch(e) {}
   }
 </script>
-
 </body>
 </html>
