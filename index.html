@@ -9,7 +9,7 @@
     html, body { height: 100%; }
     body { font-family: Arial, sans-serif; background: #404040; display: flex; }
 
-    /* ── DESKTOP ── */
+    /* DESKTOP */
     .sidebar {
       width: 220px; min-width: 220px; background: #fff;
       display: flex; flex-direction: column;
@@ -17,50 +17,52 @@
       box-shadow: 2px 0 12px rgba(0,0,0,.18);
       z-index: 1; overflow-y: auto;
     }
-    .sb-logo  { font-size: 17px; font-weight: bold; color: #1a3a6b; margin-bottom: 2px; }
-    .sb-addr  { font-size: 10px; color: #aaa; margin-bottom: 16px; line-height: 1.5; }
+    .sb-logo    { font-size: 17px; font-weight: bold; color: #1a3a6b; margin-bottom: 2px; }
+    .sb-addr    { font-size: 10px; color: #aaa; margin-bottom: 16px; line-height: 1.5; }
     .sb-divider { border: none; border-top: 2px solid #1a3a6b; margin-bottom: 16px; }
-    .badge { display: inline-block; background: #eafaf1; color: #27ae60; border: 1px solid #a9dfbf; border-radius: 12px; padding: 4px 10px; font-size: 11px; font-weight: bold; margin-bottom: 20px; }
-    .field { margin-bottom: 14px; }
+    .badge      { display: inline-block; background: #eafaf1; color: #27ae60; border: 1px solid #a9dfbf; border-radius: 12px; padding: 4px 10px; font-size: 11px; font-weight: bold; margin-bottom: 20px; }
+    .field      { margin-bottom: 14px; }
     .field-label { font-size: 10px; font-weight: bold; color: #aaa; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
     .field-value { font-size: 13px; color: #222; font-weight: bold; word-break: break-word; }
-    .spacer { flex: 1; }
+    .spacer     { flex: 1; }
     .btn { display: block; width: 100%; padding: 11px 0; border: none; border-radius: 7px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; margin-bottom: 8px; }
-    .btn:hover { opacity: .87; }
-    .btn-dl    { background: #e65100; color: #fff; }
-    .btn-view  { background: #2e7d32; color: #fff; }
-    .btn-email { background: #1565c0; color: #fff; }
-    .btn-close { background: #424242; color: #fff; }
-    .sb-footer { font-size: 9px; color: #ccc; text-align: center; margin-top: 12px; line-height: 1.5; }
+    .btn:hover  { opacity: .87; }
+    .btn-dl     { background: #e65100; color: #fff; }
+    .btn-view   { background: #2e7d32; color: #fff; }
+    .btn-email  { background: #1565c0; color: #fff; }
+    .btn-close  { background: #424242; color: #fff; }
+    .sb-footer  { font-size: 9px; color: #ccc; text-align: center; margin-top: 12px; line-height: 1.5; }
 
-    .pdf-wrap { flex: 1; position: relative; overflow: hidden; }
-    iframe { width: 100%; height: calc(100% + 55px); border: none; display: block; }
-    .drive-blocker { position: absolute; top: 0; right: 0; width: 60px; height: 60px; z-index: 10; }
+    .pdf-wrap   { flex: 1; position: relative; overflow: hidden; background: #404040; }
+    iframe      { width: 100%; height: 100%; border: none; display: block; }
 
-    /* ── MOBILE ── */
+    /* Loading overlay */
+    .loading {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #404040; color: #ccc; font-size: 14px; font-family: Arial;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid #666; border-top-color: #ccc;
+      border-radius: 50%; animation: spin .8s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* MOBILE */
     @media (max-width: 700px) {
       html, body { height: auto; overflow: auto; background: #f0f2f5; }
       body { flex-direction: column; }
-
-      .sidebar {
-        width: 100%; min-width: 0;
-        box-shadow: none;
-        padding: 20px 16px 16px;
-      }
+      .sidebar { width: 100%; min-width: 0; box-shadow: none; padding: 20px 16px 16px; }
       .sb-logo  { font-size: 20px; }
       .badge    { display: block; text-align: center; font-size: 13px; padding: 8px 14px; margin-bottom: 20px; }
       .field-label { font-size: 11px; }
       .field-value { font-size: 15px; }
       .spacer   { display: none; }
       .sb-footer { display: none; }
-
-      /* hide desktop buttons in sidebar on mobile */
       .sidebar .btn { display: none; }
-
-      /* hide iframe on mobile */
       .pdf-wrap { display: none; }
-
-      /* show mobile button area */
       .mobile-btns { display: flex !important; }
     }
 
@@ -72,6 +74,7 @@
       background: #f0f2f5;
     }
     .mobile-btns .btn { margin-bottom: 0; padding: 15px 0; font-size: 15px; border-radius: 10px; }
+    .mobile-btns .btn:disabled { opacity: .5; cursor: wait; }
   </style>
 </head>
 <body>
@@ -81,83 +84,125 @@
   <div class="sb-addr">Robert-Bosch-Stra&szlig;e 5 C<br>63303 Dreieich &middot; Germany</div>
   <hr class="sb-divider">
   <div class="badge">&#10003; Verified Document</div>
-  <div class="field">
-    <div class="field-label">Document No</div>
-    <div class="field-value" id="f-doc"></div>
-  </div>
-  <div class="field">
-    <div class="field-label">Date</div>
-    <div class="field-value" id="f-date"></div>
-  </div>
-  <div class="field">
-    <div class="field-label">Recipient</div>
-    <div class="field-value" id="f-recipient"></div>
-  </div>
+  <div class="field"><div class="field-label">Document No</div><div class="field-value" id="f-doc"></div></div>
+  <div class="field"><div class="field-label">Date</div><div class="field-value" id="f-date"></div></div>
+  <div class="field"><div class="field-label">Recipient</div><div class="field-value" id="f-recipient"></div></div>
   <div class="spacer"></div>
-  <!-- desktop buttons -->
   <a class="btn btn-dl"    id="btn-dl"    href="#" target="_blank">&#11015; Download PDF</a>
   <a class="btn btn-email" id="btn-email" href="#">&#9993; Send by Email</a>
-  <button class="btn btn-close" onclick="closePage()">&#10005; Close</button>
+  <button class="btn btn-close" onclick="doClose()">&#10005; Close</button>
   <div class="sb-footer">IFAMO GmbH &middot; Dreieich<br>HRB 51794 Offenbach am Main</div>
 </div>
 
-<!-- desktop PDF viewer -->
 <div class="pdf-wrap">
-  <div class="drive-blocker"></div>
-  <iframe id="pdf-frame" src="" allowfullscreen></iframe>
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <span>Loading document...</span>
+  </div>
+  <iframe id="pdf-frame" src=""></iframe>
 </div>
 
-<!-- mobile buttons -->
 <div class="mobile-btns">
   <a class="btn btn-view"  id="btn-view"  href="#" target="_blank">&#128196; View PDF</a>
   <a class="btn btn-dl"    id="btn-dl-m"  href="#" target="_blank">&#11015; Download PDF</a>
   <a class="btn btn-email" id="btn-email-m" href="#">&#9993; Send by Email</a>
-  <button class="btn btn-close" onclick="closePage()">&#10005; Close</button>
+  <button class="btn btn-close" onclick="doClose()">&#10005; Close</button>
 </div>
 
 <script>
+  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUnUjn_pnFfngSH8DbV4owjvABT2A9-8wzspKMh3Ii1XWxZ9lhOIGN15ExuvNrEUW5/exec";
+
   var p         = new URLSearchParams(window.location.search);
   var docNo     = p.get('doc')       || '';
   var pdfId     = p.get('pdf')       || '';
   var date      = p.get('date')      || '';
   var recipient = p.get('recipient') || '';
+  var mode      = p.get('mode')      || '';  // 'github' = pdfId is already a raw URL
+
+  var ghFilename = null;
 
   document.title = 'Document Verification \u2013 ' + docNo;
   document.getElementById('f-doc').textContent       = docNo;
   document.getElementById('f-date').textContent      = date;
   document.getElementById('f-recipient').textContent = recipient;
 
-  var dlUrl   = pdfId ? 'https://drive.google.com/uc?id=' + pdfId + '&export=download&confirm=t' : '#';
-  var viewUrl = pdfId ? 'https://drive.google.com/file/d/' + pdfId + '/view' : '#';
+  function setUrls(rawUrl) {
+    var viewerUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(rawUrl) + '&embedded=true';
 
-  if (pdfId) {
-    document.getElementById('pdf-frame').src = 'https://drive.google.com/file/d/' + pdfId + '/preview';
+    document.getElementById('pdf-frame').src = viewerUrl;
+    document.getElementById('btn-dl').href   = rawUrl;
+    document.getElementById('btn-dl-m') && (document.getElementById('btn-dl-m').href = rawUrl);
+    document.getElementById('btn-view') && (document.getElementById('btn-view').href  = rawUrl);
+
+    var verifyUrl = window.location.origin + window.location.pathname
+      + '?doc=' + encodeURIComponent(docNo)
+      + '&pdf=' + encodeURIComponent(rawUrl)
+      + '&date=' + encodeURIComponent(date)
+      + '&recipient=' + encodeURIComponent(recipient)
+      + '&mode=github';
+
+    var subject = 'Document Verification \u2013 ' + docNo + ' \u2013 IFAMO GmbH';
+    var body =
+      'Dear Sir or Madam,\n\n' +
+      'Please find below the verified document issued by IFAMO GmbH:\n\n' +
+      '  Document No : ' + docNo + '\n' +
+      '  Date        : ' + date  + '\n' +
+      '  Recipient   : ' + recipient + '\n\n' +
+      'View / Verify Document:\n' + verifyUrl + '\n\n' +
+      'This document has been officially issued and verified by IFAMO GmbH.\n\n' +
+      'Best regards,\nIFAMO GmbH\n\n' +
+      'Robert-Bosch-Stra\u00dfe 5 C \u00b7 63303 Dreieich \u00b7 Germany\n' +
+      'Tel: +49 (0) 6103 509 5001\nwww.ifamo.de';
+    var mailto = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    document.getElementById('btn-email').href   = mailto;
+    document.getElementById('btn-email-m') && (document.getElementById('btn-email-m').href = mailto);
+
+    document.getElementById('loading').style.display = 'none';
   }
-  document.getElementById('btn-dl').href    = dlUrl;
-  document.getElementById('btn-dl-m').href  = dlUrl;
-  document.getElementById('btn-view').href  = viewUrl;
 
-  var verifyUrl = window.location.href;
-  var subject   = 'Document Verification \u2013 ' + docNo + ' \u2013 IFAMO GmbH';
-  var body =
-    'Dear Sir or Madam,\n\n' +
-    'Please find below the verified document issued by IFAMO GmbH:\n\n' +
-    '  Document No : ' + docNo + '\n' +
-    '  Date        : ' + date  + '\n' +
-    '  Recipient   : ' + recipient + '\n\n' +
-    'View / Verify Document:\n' + verifyUrl + '\n\n' +
-    'This document has been officially issued and verified by IFAMO GmbH.\n\n' +
-    'Best regards,\nIFAMO GmbH\n\n' +
-    'Robert-Bosch-Stra\u00dfe 5 C \u00b7 63303 Dreieich \u00b7 Germany\n' +
-    'Tel: +49 (0) 6103 509 5001\nwww.ifamo.de';
-  var mailto = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-  document.getElementById('btn-email').href   = mailto;
-  document.getElementById('btn-email-m').href = mailto;
+  function prepare() {
+    // If already a raw GitHub URL (e.g. from email link), use directly
+    if (mode === 'github' && pdfId.startsWith('http')) {
+      ghFilename = pdfId.split('/').pop();
+      setUrls(pdfId);
+      return;
+    }
 
-  function closePage() {
+    // Otherwise fetch from Apps Script (uploads Drive PDF to GitHub)
+    fetch(SCRIPT_URL + '?action=prepare&pdf=' + encodeURIComponent(pdfId) + '&doc=' + encodeURIComponent(docNo))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) {
+          ghFilename = data.filename;
+          setUrls(data.url);
+        } else {
+          document.getElementById('loading').innerHTML = '<p style="color:#f66;padding:20px">Error: ' + data.error + '</p>';
+        }
+      })
+      .catch(function(err) {
+        document.getElementById('loading').innerHTML = '<p style="color:#f66;padding:20px">Connection error. Please try again.</p>';
+      });
+  }
+
+  function doClose() {
+    if (ghFilename) {
+      navigator.sendBeacon
+        ? navigator.sendBeacon(SCRIPT_URL + '?action=cleanup&filename=' + encodeURIComponent(ghFilename))
+        : fetch(SCRIPT_URL + '?action=cleanup&filename=' + encodeURIComponent(ghFilename));
+    }
     try { top.close(); } catch(e) {}
     try { window.close(); } catch(e) {}
   }
+
+  window.addEventListener('beforeunload', function() {
+    if (ghFilename) {
+      navigator.sendBeacon && navigator.sendBeacon(
+        SCRIPT_URL + '?action=cleanup&filename=' + encodeURIComponent(ghFilename)
+      );
+    }
+  });
+
+  prepare();
 </script>
 </body>
 </html>
