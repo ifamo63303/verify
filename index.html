@@ -247,11 +247,7 @@
   function doEmail() {
     if (!rawUrl) return;
     var verifyUrl = window.location.origin + window.location.pathname
-      + '?doc=' + encodeURIComponent(docNo)
-      + '&pdf=' + encodeURIComponent(rawUrl)
-      + '&date=' + encodeURIComponent(date)
-      + '&recipient=' + encodeURIComponent(recipient)
-      + '&mode=github';
+      + '?d=' + encodeURIComponent(shortId || docNo);
     var subject = 'Document Verification \u2013 ' + docNo + ' \u2013 IFAMO GmbH';
     var body =
       'Dear Sir or Madam,\n\n' +
