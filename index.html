@@ -160,18 +160,24 @@
   document.getElementById('f-recipient').textContent = recipient;
 
   // ── PDF.js render ────────────────────────────────────────────────
-  function renderPdfInto(container, url, width) {
+  function renderPdfInto(container, url, cssWidth) {
+    var dpr = window.devicePixelRatio || 1;
     pdfjsLib.getDocument({ url: url, withCredentials: false }).promise
       .then(function(pdf) {
         document.getElementById('loading') && (document.getElementById('loading').style.display = 'none');
-        var scale = (width - 32) / 595;
-        if (scale < 0.5) scale = 0.5;
+        var baseScale = (cssWidth - 32) / 595;
+        if (baseScale < 0.5) baseScale = 0.5;
+        var scale = baseScale * dpr;
+
         for (var i = 1; i <= pdf.numPages; i++) {
           (function(n) {
             pdf.getPage(n).then(function(page) {
               var vp = page.getViewport({ scale: scale });
               var c  = document.createElement('canvas');
-              c.width = vp.width; c.height = vp.height;
+              c.width  = vp.width;
+              c.height = vp.height;
+              c.style.width  = (vp.width  / dpr) + 'px';
+              c.style.height = (vp.height / dpr) + 'px';
               container.appendChild(c);
               page.render({ canvasContext: c.getContext('2d'), viewport: vp });
             });
@@ -224,8 +230,17 @@
 
   function doClose() {
     cleanup();
-    if (window.history.length > 1) { window.history.back(); }
-    else { try { window.close(); } catch(e) {} }
+    try { window.close(); } catch(e) {}
+    // Eğer kapanmazsa "kapatabilirsiniz" ekranı göster
+    setTimeout(function() {
+      document.body.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f0f2f5;font-family:Arial">' +
+        '<div style="text-align:center;padding:40px">' +
+        '<div style="font-size:48px;margin-bottom:16px">&#10003;</div>' +
+        '<div style="font-size:20px;font-weight:bold;color:#333;margin-bottom:8px">Done</div>' +
+        '<div style="font-size:14px;color:#888">You can now close this tab.</div>' +
+        '</div></div>';
+    }, 300);
   }
 
   function doMobileView() {
