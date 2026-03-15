@@ -171,18 +171,29 @@
       ghFilename = pdfId.split('/').pop();
       onReady(pdfId, ghFilename);
     } else {
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'prepare', secret: getToken(), pdf: pdfId, doc: docNo })
-      })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (data.ok) { onReady(data.url, data.filename); }
-          else { showError('Error: ' + data.error); }
-        })
-        .catch(function() { showError('Connection error. Please try again.'); });
+      fetchWithRetry(3);
     }
+  }
+
+  function fetchWithRetry(remaining) {
+    var attempt = 4 - remaining;
+    var msg = attempt === 0 ? 'Loading document...' : 'Loading document... (attempt ' + (attempt + 1) + ')';
+    document.getElementById('loading-msg').textContent = msg;
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'prepare', secret: getToken(), pdf: pdfId, doc: docNo })
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) { onReady(data.url, data.filename); }
+        else if (remaining > 1) { setTimeout(function() { fetchWithRetry(remaining - 1); }, 2000); }
+        else { showError('Error: ' + data.error); }
+      })
+      .catch(function() {
+        if (remaining > 1) { setTimeout(function() { fetchWithRetry(remaining - 1); }, 2000); }
+        else { showError('Connection error. Please try again.'); }
+      });
   }
 
   function showError(msg) {
