@@ -33,14 +33,27 @@
     .btn-close  { background: #424242; color: #fff; }
     .sb-footer  { font-size: 9px; color: #ccc; text-align: center; margin-top: 12px; line-height: 1.5; }
 
-    .pdf-wrap   { flex: 1; position: relative; overflow: hidden; background: #404040; }
-    iframe      { width: 100%; height: 100%; border: none; display: block; }
+    .pdf-wrap   { flex: 1; position: relative; overflow: hidden; background: #525659; }
+
+    /* PDF.js canvas area */
+    #pdf-viewer {
+      width: 100%; height: 100%;
+      overflow-y: auto; overflow-x: hidden;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 16px 0;
+    }
+    #pdf-viewer canvas {
+      display: block;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.4);
+    }
 
     /* Loading overlay */
     .loading {
       position: absolute; inset: 0;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: #404040; color: #ccc; font-size: 14px; font-family: Arial;
+      background: #525659; color: #ccc; font-size: 14px; font-family: Arial;
+      z-index: 5;
     }
     .spinner {
       width: 40px; height: 40px;
@@ -74,7 +87,6 @@
       background: #f0f2f5;
     }
     .mobile-btns .btn { margin-bottom: 0; padding: 15px 0; font-size: 15px; border-radius: 10px; }
-    .mobile-btns .btn:disabled { opacity: .5; cursor: wait; }
   </style>
 </head>
 <body>
@@ -97,9 +109,9 @@
 <div class="pdf-wrap">
   <div class="loading" id="loading">
     <div class="spinner"></div>
-    <span>Loading document...</span>
+    <span id="loading-msg">Loading document...</span>
   </div>
-  <iframe id="pdf-frame" src=""></iframe>
+  <div id="pdf-viewer"></div>
 </div>
 
 <div class="mobile-btns">
@@ -109,7 +121,12 @@
   <button class="btn btn-close" onclick="doClose()">&#10005; Close</button>
 </div>
 
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
   var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUnUjn_pnFfngSH8DbV4owjvABT2A9-8wzspKMh3Ii1XWxZ9lhOIGN15ExuvNrEUW5/exec";
 
   var p         = new URLSearchParams(window.location.search);
@@ -117,7 +134,7 @@
   var pdfId     = p.get('pdf')       || '';
   var date      = p.get('date')      || '';
   var recipient = p.get('recipient') || '';
-  var mode      = p.get('mode')      || '';  // 'github' = pdfId is already a raw URL
+  var mode      = p.get('mode')      || '';
 
   var ghFilename = null;
 
@@ -126,11 +143,39 @@
   document.getElementById('f-date').textContent      = date;
   document.getElementById('f-recipient').textContent = recipient;
 
+  function renderPdf(rawUrl) {
+    var viewer = document.getElementById('pdf-viewer');
+    var wrap   = document.querySelector('.pdf-wrap');
+
+    pdfjsLib.getDocument({ url: rawUrl, withCredentials: false }).promise
+      .then(function(pdf) {
+        document.getElementById('loading').style.display = 'none';
+        var scale = (wrap.offsetWidth - 32) / 595; // A4 width ~595pt
+        if (scale < 0.5) scale = 0.5;
+
+        for (var i = 1; i <= pdf.numPages; i++) {
+          (function(pageNum) {
+            pdf.getPage(pageNum).then(function(page) {
+              var vp     = page.getViewport({ scale: scale });
+              var canvas = document.createElement('canvas');
+              canvas.width  = vp.width;
+              canvas.height = vp.height;
+              viewer.appendChild(canvas);
+              page.render({ canvasContext: canvas.getContext('2d'), viewport: vp });
+            });
+          })(i);
+        }
+      })
+      .catch(function(err) {
+        document.getElementById('loading-msg').textContent = 'Error loading PDF: ' + err.message;
+        document.getElementById('loading').querySelector('.spinner').style.display = 'none';
+      });
+  }
+
   function setUrls(rawUrl) {
-    document.getElementById('pdf-frame').src = rawUrl;
-    document.getElementById('btn-dl').href   = rawUrl;
-    document.getElementById('btn-dl-m') && (document.getElementById('btn-dl-m').href = rawUrl);
-    document.getElementById('btn-view') && (document.getElementById('btn-view').href  = rawUrl);
+    document.getElementById('btn-dl').href  = rawUrl;
+    document.getElementById('btn-dl-m')  && (document.getElementById('btn-dl-m').href  = rawUrl);
+    document.getElementById('btn-view')  && (document.getElementById('btn-view').href   = rawUrl);
 
     var verifyUrl = window.location.origin + window.location.pathname
       + '?doc=' + encodeURIComponent(docNo)
@@ -155,18 +200,17 @@
     document.getElementById('btn-email').href   = mailto;
     document.getElementById('btn-email-m') && (document.getElementById('btn-email-m').href = mailto);
 
-    document.getElementById('loading').style.display = 'none';
+    // Render PDF with PDF.js (desktop only)
+    if (window.innerWidth > 700) renderPdf(rawUrl);
   }
 
   function prepare() {
-    // If already a raw GitHub URL (e.g. from email link), use directly
     if (mode === 'github' && pdfId.startsWith('http')) {
       ghFilename = pdfId.split('/').pop();
       setUrls(pdfId);
       return;
     }
 
-    // Otherwise fetch from Apps Script (uploads Drive PDF to GitHub)
     fetch(SCRIPT_URL + '?action=prepare&pdf=' + encodeURIComponent(pdfId) + '&doc=' + encodeURIComponent(docNo))
       .then(function(r) { return r.json(); })
       .then(function(data) {
@@ -174,11 +218,13 @@
           ghFilename = data.filename;
           setUrls(data.url);
         } else {
-          document.getElementById('loading').innerHTML = '<p style="color:#f66;padding:20px">Error: ' + data.error + '</p>';
+          document.getElementById('loading-msg').textContent = 'Error: ' + data.error;
+          document.getElementById('loading').querySelector('.spinner').style.display = 'none';
         }
       })
       .catch(function(err) {
-        document.getElementById('loading').innerHTML = '<p style="color:#f66;padding:20px">Connection error. Please try again.</p>';
+        document.getElementById('loading-msg').textContent = 'Connection error. Please try again.';
+        document.getElementById('loading').querySelector('.spinner').style.display = 'none';
       });
   }
 
