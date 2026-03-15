@@ -145,6 +145,10 @@
 
   var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUnUjn_pnFfngSH8DbV4owjvABT2A9-8wzspKMh3Ii1XWxZ9lhOIGN15ExuvNrEUW5/exec";
   var SCRIPT_SECRET = "NbmNAGhngzYl2_1QOaT7vCzonpFwfwOO";
+  function getToken() {
+    var hour = Math.floor(Date.now() / 3600000);
+    return SCRIPT_SECRET + ':' + hour;
+  }
 
   var p         = new URLSearchParams(window.location.search);
   var shortId   = p.get('d') || '';
@@ -170,7 +174,7 @@
       fetch(SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'prepare', secret: SCRIPT_SECRET, pdf: pdfId, doc: docNo })
+        body: JSON.stringify({ action: 'prepare', secret: getToken(), pdf: pdfId, doc: docNo })
       })
         .then(function(r) { return r.json(); })
         .then(function(data) {
@@ -300,8 +304,8 @@
   function cleanup() {
     if (ghFilename) {
       navigator.sendBeacon
-        ? navigator.sendBeacon(SCRIPT_URL, new Blob([JSON.stringify({ action: 'cleanup', secret: SCRIPT_SECRET, filename: ghFilename })], { type: 'application/json' }))
-        : fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'cleanup', secret: SCRIPT_SECRET, filename: ghFilename }) });
+        ? navigator.sendBeacon(SCRIPT_URL, new Blob([JSON.stringify({ action: 'cleanup', secret: getToken(), filename: ghFilename })], { type: 'application/json' }))
+        : fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'cleanup', secret: getToken(), filename: ghFilename }) });
     }
   }
   // Cleanup sadece zaman tetikleyicisi ile yapılıyor (verifier.gs → cleanupOldTempFiles)
