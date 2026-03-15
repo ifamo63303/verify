@@ -229,9 +229,7 @@
   }
 
   function doClose() {
-    cleanup();
     try { window.close(); } catch(e) {}
-    // Eğer kapanmazsa "kapatabilirsiniz" ekranı göster
     setTimeout(function() {
       document.body.innerHTML =
         '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f0f2f5;font-family:Arial">' +
@@ -267,7 +265,7 @@
         : fetch(SCRIPT_URL + '?action=cleanup&filename=' + encodeURIComponent(ghFilename));
     }
   }
-  window.addEventListener('beforeunload', cleanup);
+  // Cleanup sadece zaman tetikleyicisi ile yapılıyor (verifier.gs → cleanupOldTempFiles)
 
   // ── Prepare ──────────────────────────────────────────────────────
   function onReady(url, filename) {
