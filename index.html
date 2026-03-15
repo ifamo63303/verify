@@ -167,7 +167,11 @@
       ghFilename = pdfId.split('/').pop();
       onReady(pdfId, ghFilename);
     } else {
-      fetch(SCRIPT_URL + '?action=prepare&secret=' + SCRIPT_SECRET + '&pdf=' + encodeURIComponent(pdfId) + '&doc=' + encodeURIComponent(docNo))
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'prepare', secret: SCRIPT_SECRET, pdf: pdfId, doc: docNo })
+      })
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data.ok) { onReady(data.url, data.filename); }
@@ -296,8 +300,8 @@
   function cleanup() {
     if (ghFilename) {
       navigator.sendBeacon
-        ? navigator.sendBeacon(SCRIPT_URL + '?action=cleanup&secret=' + SCRIPT_SECRET + '&filename=' + encodeURIComponent(ghFilename))
-        : fetch(SCRIPT_URL + '?action=cleanup&secret=' + SCRIPT_SECRET + '&filename=' + encodeURIComponent(ghFilename));
+        ? navigator.sendBeacon(SCRIPT_URL, new Blob([JSON.stringify({ action: 'cleanup', secret: SCRIPT_SECRET, filename: ghFilename })], { type: 'application/json' }))
+        : fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'cleanup', secret: SCRIPT_SECRET, filename: ghFilename }) });
     }
   }
   // Cleanup sadece zaman tetikleyicisi ile yapılıyor (verifier.gs → cleanupOldTempFiles)
