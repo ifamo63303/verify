@@ -315,23 +315,7 @@
     }
   }
 
-  if (mode === 'github' && pdfId.startsWith('http')) {
-    onReady(pdfId, pdfId.split('/').pop());
-  } else {
-    fetch(SCRIPT_URL + '?action=prepare&pdf=' + encodeURIComponent(pdfId) + '&doc=' + encodeURIComponent(docNo))
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.ok) { onReady(data.url, data.filename); }
-        else {
-          document.getElementById('loading-msg').textContent = 'Error: ' + data.error;
-          document.getElementById('loading').querySelector('.spinner').style.display = 'none';
-        }
-      })
-      .catch(function() {
-        document.getElementById('loading-msg').textContent = 'Connection error. Please try again.';
-        document.getElementById('loading').querySelector('.spinner').style.display = 'none';
-      });
-  }
+
 </script>
 </body>
 </html>
