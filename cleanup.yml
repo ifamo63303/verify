@@ -1,0 +1,26 @@
+name: Cleanup Temp PDFs
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Her saat başı
+  workflow_dispatch:       # Manuel tetikleme için
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Delete temp PDFs older than 1 hour
+        run: |
+          find docs/temp -name "*.pdf" -mmin +60 -delete
+          echo "Cleanup done."
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || git commit -m "cleanup: remove temp PDFs"
+          git push
