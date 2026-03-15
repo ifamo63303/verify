@@ -127,9 +127,7 @@
   document.getElementById('f-recipient').textContent = recipient;
 
   function setUrls(rawUrl) {
-    var viewerUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(rawUrl) + '&embedded=true';
-
-    document.getElementById('pdf-frame').src = viewerUrl;
+    document.getElementById('pdf-frame').src = rawUrl;
     document.getElementById('btn-dl').href   = rawUrl;
     document.getElementById('btn-dl-m') && (document.getElementById('btn-dl-m').href = rawUrl);
     document.getElementById('btn-view') && (document.getElementById('btn-view').href  = rawUrl);
