@@ -191,7 +191,7 @@
     fetch('/docs/data/' + shortId + '.json')
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        docNo     = shortId;
+        docNo     = data.doc_no || shortId;
         pdfId     = data.pdf;
         date      = data.date;
         recipient = data.recipient;
