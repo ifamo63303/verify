@@ -145,6 +145,7 @@
   var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUnUjn_pnFfngSH8DbV4owjvABT2A9-8wzspKMh3Ii1XWxZ9lhOIGN15ExuvNrEUW5/exec";
 
   var p         = new URLSearchParams(window.location.search);
+  var shortId   = p.get('d') || '';
   var docNo     = p.get('doc')       || '';
   var pdfId     = p.get('pdf')       || '';
   var date      = p.get('date')      || '';
@@ -154,10 +155,46 @@
   var ghFilename = null;
   var rawUrl     = null;
 
-  document.title = 'Document Verification \u2013 ' + docNo;
-  document.getElementById('f-doc').textContent       = docNo;
-  document.getElementById('f-date').textContent      = date;
-  document.getElementById('f-recipient').textContent = recipient;
+  function initPage() {
+    document.title = 'Document Verification \u2013 ' + docNo;
+    document.getElementById('f-doc').textContent       = docNo;
+    document.getElementById('f-date').textContent      = date;
+    document.getElementById('f-recipient').textContent = recipient;
+
+    if (mode === 'github' && pdfId.startsWith('http')) {
+      ghFilename = pdfId.split('/').pop();
+      onReady(pdfId, ghFilename);
+    } else {
+      fetch(SCRIPT_URL + '?action=prepare&pdf=' + encodeURIComponent(pdfId) + '&doc=' + encodeURIComponent(docNo))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.ok) { onReady(data.url, data.filename); }
+          else { showError('Error: ' + data.error); }
+        })
+        .catch(function() { showError('Connection error. Please try again.'); });
+    }
+  }
+
+  function showError(msg) {
+    document.getElementById('loading-msg').textContent = msg;
+    document.getElementById('loading').querySelector('.spinner').style.display = 'none';
+  }
+
+  // Kısa URL: ?d=IFAMO-2026-001 → JSON'dan veri al
+  if (shortId) {
+    fetch('/docs/data/' + shortId + '.json')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        docNo     = shortId;
+        pdfId     = data.pdf;
+        date      = data.date;
+        recipient = data.recipient;
+        initPage();
+      })
+      .catch(function() { showError('Document not found.'); });
+  } else {
+    initPage();
+  }
 
   // ── PDF.js render ────────────────────────────────────────────────
   function renderPdfInto(container, url, cssWidth) {
