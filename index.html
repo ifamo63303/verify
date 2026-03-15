@@ -74,8 +74,15 @@
       flex: 1; overflow-y: auto;
       display: flex; flex-direction: column; align-items: center;
       padding: 12px 0;
+      position: relative;
     }
     #overlay-viewer canvas { display: block; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+    #overlay-loading {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #525659; color: #ccc; font-size: 14px;
+    }
+    #overlay-loading.hidden { display: none; }
 
     /* MOBILE */
     @media (max-width: 700px) {
@@ -135,7 +142,12 @@
 <!-- Mobile PDF overlay -->
 <div id="pdf-overlay">
   <button id="overlay-close" onclick="closeMobileView()">&#8592; Back</button>
-  <div id="overlay-viewer"></div>
+  <div id="overlay-viewer">
+    <div id="overlay-loading">
+      <div class="spinner"></div>
+      <span id="overlay-loading-msg">Loading document...</span>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -179,6 +191,8 @@
     var attempt = 4 - remaining;
     var msg = attempt === 0 ? 'Loading document...' : 'Loading document... (attempt ' + (attempt + 1) + ')';
     document.getElementById('loading-msg').textContent = msg;
+    var ol = document.getElementById('overlay-loading-msg');
+    if (ol) ol.textContent = msg;
     fetch(SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
@@ -199,6 +213,10 @@
   function showError(msg) {
     document.getElementById('loading-msg').textContent = msg;
     document.getElementById('loading').querySelector('.spinner').style.display = 'none';
+    var ol = document.getElementById('overlay-loading-msg');
+    if (ol) ol.textContent = msg;
+    var os = document.querySelector('#overlay-loading .spinner');
+    if (os) os.style.display = 'none';
   }
 
   // Kısa URL: ?d=IFAMO-2026-001 → JSON'dan veri al
@@ -295,15 +313,26 @@
     }, 300);
   }
 
+  var mobileViewRequested = false;
+
   function doMobileView() {
-    if (!rawUrl) return;
     var overlay = document.getElementById('pdf-overlay');
-    var viewer  = document.getElementById('overlay-viewer');
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
-    if (!viewer.hasChildNodes()) {
-      renderPdfInto(viewer, rawUrl, window.innerWidth);
+    mobileViewRequested = true;
+    if (rawUrl) {
+      renderMobileOverlay();
     }
+    // else: overlay açık, spinner görünüyor — onReady() gelince render edilecek
+  }
+
+  function renderMobileOverlay() {
+    var viewer  = document.getElementById('overlay-viewer');
+    var loading = document.getElementById('overlay-loading');
+    var canvases = viewer.querySelectorAll('canvas');
+    if (canvases.length > 0) return; // zaten render edildi
+    loading.classList.add('hidden');
+    renderPdfInto(viewer, rawUrl, window.innerWidth);
   }
 
   function closeMobileView() {
@@ -329,6 +358,9 @@
       renderPdfInto(document.getElementById('pdf-viewer'), url, document.querySelector('.pdf-wrap').offsetWidth);
     } else {
       document.getElementById('loading') && (document.getElementById('loading').style.display = 'none');
+      if (mobileViewRequested) {
+        renderMobileOverlay();
+      }
     }
   }
 
