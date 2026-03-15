@@ -173,7 +173,7 @@
     } else {
       fetch(SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ action: 'prepare', secret: getToken(), pdf: pdfId, doc: docNo })
       })
         .then(function(r) { return r.json(); })
@@ -305,7 +305,7 @@
     if (ghFilename) {
       navigator.sendBeacon
         ? navigator.sendBeacon(SCRIPT_URL, new Blob([JSON.stringify({ action: 'cleanup', secret: getToken(), filename: ghFilename })], { type: 'application/json' }))
-        : fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'cleanup', secret: getToken(), filename: ghFilename }) });
+        : fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'cleanup', secret: getToken(), filename: ghFilename }) });
     }
   }
   // Cleanup sadece zaman tetikleyicisi ile yapılıyor (verifier.gs → cleanupOldTempFiles)
